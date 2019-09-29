@@ -1,9 +1,10 @@
-package com.sample.clientserverlocator.Receiver
+package com.sample.clientserverlocator.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.telephony.SmsMessage
+import com.sample.clientserverlocator.DataWorkService
 
 class SmsReceiver: BroadcastReceiver() {
     val ACTION = "android.provider.Telephony.SMS_RECEIVED"
@@ -18,11 +19,11 @@ class SmsReceiver: BroadcastReceiver() {
                         messageList.add(SmsMessage.createFromPdu(data))
                     }
                 }
-                var body : StringBuilder = StringBuilder()
+                val body : StringBuilder = StringBuilder()
                 messageList.forEach {
                     body.append(it.messageBody)
                 }
-
+                context?.startService(DataWorkService.newIntent(context, body.toString()))
             }
 
         }
