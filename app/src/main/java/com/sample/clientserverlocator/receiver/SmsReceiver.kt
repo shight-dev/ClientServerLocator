@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.telephony.SmsMessage
-import com.sample.clientserverlocator.ScanNetworkService
+import com.sample.clientserverlocator.service.ScanNetworkService
 
 const val ACTION = "android.provider.Telephony.SMS_RECEIVED"
 const val INTENT_FILTER = "android.provider.Telephony.SMS_RECEIVED"
@@ -19,16 +19,17 @@ class SmsReceiver : BroadcastReceiver() {
                 val messageList: MutableList<SmsMessage> = mutableListOf()
                 for (data in pduArray) {
                     if (data is ByteArray) {
+                        //TODO fix
                         messageList.add(SmsMessage.createFromPdu(data))
                     }
                 }
-                val phone:String? = messageList.getOrNull(0)?.displayOriginatingAddress
+                val phone: String? = messageList.getOrNull(0)?.displayOriginatingAddress
                 val body: StringBuilder = StringBuilder()
                 messageList.forEach {
                     body.append(it.messageBody)
                 }
                 context?.let {
-                    phone?.let{
+                    phone?.let {
                         ScanNetworkService.startActionScan(context, body.toString(), phone)
                     }
                 }
@@ -37,8 +38,8 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
 
-    companion object{
-        fun createIntentFilter():IntentFilter{
+    companion object {
+        fun createIntentFilter(): IntentFilter {
             return IntentFilter(INTENT_FILTER)
         }
     }

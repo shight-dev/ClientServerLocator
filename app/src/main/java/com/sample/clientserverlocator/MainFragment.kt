@@ -10,7 +10,6 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -19,6 +18,8 @@ import kotlinx.android.synthetic.main.fragment_main.*
 
 const val PHONE_KEY = "phone_key"
 const val MAC_ADDRESS = "mac_address"
+const val SERVER_API_KEY ="server_api_key"
+const val DEFAULT_MAC_ADDRESS = "00:00:00:00:00:00"
 const val DEFAULT_PHONE = ""
 const val DEFAULT_API_KEY = "DEFAULT"
 const val SEND_SMS_PERMISSION = 0
@@ -26,7 +27,7 @@ const val RECEIVE_SMS_PERMISSION = 10
 
 class MainFragment : Fragment() {
 
-    val smsReceiver = SmsReceiver()
+    private val smsReceiver = SmsReceiver()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,19 +42,26 @@ class MainFragment : Fragment() {
         context?.let {
             val pref = context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
             editPhone.setText(pref?.getString(PHONE_KEY, DEFAULT_PHONE))
-            editApiKey.setText(pref?.getString(getString(R.string.server_api_key), DEFAULT_API_KEY))
+            editApiKey.setText(pref?.getString(SERVER_API_KEY, DEFAULT_API_KEY))
+            macAddressEdit.setText(pref?.getString(MAC_ADDRESS, DEFAULT_MAC_ADDRESS))
 
             editPhone.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
                     //do nothing
                 }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                     //do nothing
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val prefPhone = context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+                    val prefPhone =
+                        context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
                     val editor = prefPhone?.edit()
                     editor?.putString(PHONE_KEY, s.toString())
                     editor?.apply()
@@ -62,7 +70,12 @@ class MainFragment : Fragment() {
             })
 
             editApiKey.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                     //do nothing
                 }
 
@@ -71,15 +84,21 @@ class MainFragment : Fragment() {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val prefServerApi = context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+                    val prefServerApi =
+                        context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
                     val editor = prefServerApi?.edit()
-                    editor?.putString(getString(R.string.server_api_key), s.toString())
+                    editor?.putString(SERVER_API_KEY, s.toString())
                     editor?.apply()
                 }
             })
 
             macAddressEdit.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
                     //do nothing
                 }
 
@@ -88,7 +107,8 @@ class MainFragment : Fragment() {
                 }
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    val prefServerApi = activity?.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+                    val prefServerApi =
+                        activity?.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
                     val editor = prefServerApi?.edit()
                     editor?.putString(MAC_ADDRESS, s.toString())
                     editor?.apply()
@@ -96,7 +116,7 @@ class MainFragment : Fragment() {
             })
 
             switchServer.setOnCheckedChangeListener { _, isChecked ->
-                if(isChecked){
+                if (isChecked) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS)
                         != PackageManager.PERMISSION_GRANTED
                     ) {
@@ -104,11 +124,10 @@ class MainFragment : Fragment() {
                             context, arrayOf(Manifest.permission.RECEIVE_SMS)
                             , RECEIVE_SMS_PERMISSION
                         )
-                    } else{
-                        context.registerReceiver(smsReceiver,SmsReceiver.createIntentFilter())
+                    } else {
+                        context.registerReceiver(smsReceiver, SmsReceiver.createIntentFilter())
                     }
-                }
-                else{
+                } else {
                     context.unregisterReceiver(smsReceiver)
                 }
             }
@@ -135,17 +154,16 @@ class MainFragment : Fragment() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when(requestCode){
-            SEND_SMS_PERMISSION ->{
+        when (requestCode) {
+            SEND_SMS_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     sendTextMessage()
                 }
             }
-            RECEIVE_SMS_PERMISSION ->{
+            RECEIVE_SMS_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    activity?.registerReceiver(smsReceiver,SmsReceiver.createIntentFilter())
-                }
-                else{
+                    activity?.registerReceiver(smsReceiver, SmsReceiver.createIntentFilter())
+                } else {
                     switchServer.isChecked = false
                 }
             }

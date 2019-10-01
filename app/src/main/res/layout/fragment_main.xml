@@ -8,7 +8,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="phone" />
+        android:inputType="phone"
+        android:hint="@string/server_phone_number"/>
 
     <EditText
         android:id="@+id/editApiKey"
@@ -16,7 +17,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text"
-        android:text="@string/api_key" />
+        android:text="@string/api_key"
+        android:hint="@string/server_api_key"/>
 
     <EditText
         android:id="@+id/macAddressEdit"
@@ -24,7 +26,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="text"
-        android:text="@string/mac_address" />
+        android:text="@string/mac_address"
+        android:hint="@string/mac_address"/>
 
     <Switch
         android:id="@+id/switchServer"

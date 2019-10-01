@@ -1,4 +1,4 @@
-package com.sample.clientserverlocator
+package com.sample.clientserverlocator.service
 
 import android.app.IntentService
 import android.content.Intent
@@ -6,6 +6,8 @@ import android.content.Context
 import android.net.wifi.WifiManager
 import android.telephony.SmsManager
 import android.text.format.Formatter
+import com.sample.clientserverlocator.R
+import com.sample.clientserverlocator.SERVER_API_KEY
 import java.io.BufferedReader
 import java.io.FileReader
 import java.lang.Exception
@@ -28,18 +30,31 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
     }
 
     private fun handleActionScan(body: String, phone: String) {
-        val key:String = getSharedPreferences(getString(R.string.app_data), Context.MODE_PRIVATE).getString(getString(
-                    R.string.server_api_key),"")?:""
-        if(!key.contentEquals("")) {
-            if (body.startsWith(key, true)){
+        val key: String =
+            getSharedPreferences(getString(R.string.app_data), Context.MODE_PRIVATE).getString(
+                SERVER_API_KEY, ""
+            ) ?: ""
+        if (!key.contentEquals("")) {
+            if (body.startsWith(key, true)) {
                 val mac = body.substringAfter(key)
                 val macList = scanNetwork()
                 val smsManager = SmsManager.getDefault()
-                if(macList.contains(mac)){
-                    smsManager.sendTextMessage(phone, null,getString(R.string.mac_was_found), null, null)
-                }
-                else{
-                    smsManager.sendTextMessage(phone, null, getString(R.string.mac_was_not_found), null, null)
+                if (macList.contains(mac)) {
+                    smsManager.sendTextMessage(
+                        phone,
+                        null,
+                        getString(R.string.mac_was_found),
+                        null,
+                        null
+                    )
+                } else {
+                    smsManager.sendTextMessage(
+                        phone,
+                        null,
+                        getString(R.string.mac_was_not_found),
+                        null,
+                        null
+                    )
                 }
             }
         }
@@ -47,7 +62,7 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
 
     companion object {
         @JvmStatic
-        fun startActionScan(context: Context, body: String, phone:String) {
+        fun startActionScan(context: Context, body: String, phone: String) {
             val intent = Intent(context, ScanNetworkService::class.java).apply {
                 action = ACTION_SCAN
                 putExtra(BODY, body)
@@ -57,13 +72,14 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
         }
     }
 
-    private fun scanNetwork():MutableList<String> {
+    private fun scanNetwork(): MutableList<String> {
         val wm = this.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
         val mutableIpList = mutableListOf<String>()
         val mutableMacList = mutableListOf<String>()
-        if(wm.isWifiEnabled) {
+        if (wm.isWifiEnabled) {
             val connectionInfo = wm.connectionInfo
             val ipAddress = connectionInfo.ipAddress
+            //TODO fix
             val ipString = Formatter.formatIpAddress(ipAddress)
 
             val prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1)
@@ -85,17 +101,17 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
     private fun getMacAddressFromIP(ipFinding: String): String {
         val bufferedReader: BufferedReader?
         try {
-            bufferedReader = BufferedReader (FileReader ("/proc/net/arp"))
-            var line:String? = bufferedReader.readLine()
+            bufferedReader = BufferedReader(FileReader("/proc/net/arp"))
+            var line: String? = bufferedReader.readLine()
             while ((line) != null) {
 
                 val splitted = line.split(Regex("\\s+"))
                 if (splitted.size >= 4) {
-                    val ip:String = splitted [0]
-                    val mac:String = splitted [3]
+                    val ip: String = splitted[0]
+                    val mac: String = splitted[3]
                     if (mac.matches(Regex("..:..:..:..:..:.."))) {
 
-                        if (ip.equals(ipFinding,true)) {
+                        if (ip.equals(ipFinding, true)) {
                             return mac
                         }
                     }
