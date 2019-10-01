@@ -13,6 +13,7 @@ import java.net.InetAddress
 
 private const val ACTION_SCAN = "com.sample.clientserverlocator.action.scan"
 private const val BODY = "com.sample.clientserverlocator.extra.body"
+private const val PHONE = "com.sample.clientserverlocator.extra.phone"
 
 class ScanNetworkService : IntentService("ScanNetworkService") {
 
@@ -20,12 +21,13 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
         when (intent?.action) {
             ACTION_SCAN -> {
                 val body = intent.getStringExtra(BODY)
-                handleActionScan(body)
+                val phone = intent.getStringExtra(PHONE)
+                handleActionScan(body, phone)
             }
         }
     }
 
-    private fun handleActionScan(body: String) {
+    private fun handleActionScan(body: String, phone: String) {
         val key:String = getSharedPreferences(getString(R.string.app_data), Context.MODE_PRIVATE).getString(getString(
                     R.string.server_api_key),"")?:""
         if(!key.contentEquals("")) {
@@ -34,10 +36,10 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
                 val macList = scanNetwork()
                 val smsManager = SmsManager.getDefault()
                 if(macList.contains(mac)){
-                    smsManager.sendTextMessage(body, null,getString(R.string.mac_was_found), null, null)
+                    smsManager.sendTextMessage(phone, null,getString(R.string.mac_was_found), null, null)
                 }
                 else{
-                    smsManager.sendTextMessage(body, null, getString(R.string.mac_was_not_found), null, null)
+                    smsManager.sendTextMessage(phone, null, getString(R.string.mac_was_not_found), null, null)
                 }
             }
         }
@@ -45,10 +47,11 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
 
     companion object {
         @JvmStatic
-        fun startActionScan(context: Context, body: String) {
+        fun startActionScan(context: Context, body: String, phone:String) {
             val intent = Intent(context, ScanNetworkService::class.java).apply {
                 action = ACTION_SCAN
                 putExtra(BODY, body)
+                putExtra(PHONE, phone)
             }
             context.startService(intent)
         }

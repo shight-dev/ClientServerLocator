@@ -19,7 +19,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <service
             android:name=".ScanNetworkService"
-            android:exported="false"></service>
+            android:exported="false" />
 
         <activity android:name=".MainActivity">
             <intent-filter>
@@ -28,19 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".receiver.SmsReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
-            <intent-filter android:priority="6000">
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
-        </receiver>
-
-        <service
-            android:name=".DataWorkService"
-            android:exported="false" />
     </application>
 
 </manifest>

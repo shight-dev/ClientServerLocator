@@ -10,9 +10,11 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.sample.clientserverlocator.receiver.SmsReceiver
 import kotlinx.android.synthetic.main.fragment_main.*
 
 const val PHONE_KEY = "phone_key"
@@ -23,6 +25,8 @@ const val SEND_SMS_PERMISSION = 0
 const val RECEIVE_SMS_PERMISSION = 10
 
 class MainFragment : Fragment() {
+
+    val smsReceiver = SmsReceiver()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,14 +39,6 @@ class MainFragment : Fragment() {
         super.onStart()
         val context = activity
         context?.let {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    context, arrayOf(Manifest.permission.RECEIVE_SMS)
-                    , RECEIVE_SMS_PERMISSION
-                )
-            }
             val pref = context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
             editPhone.setText(pref?.getString(PHONE_KEY, DEFAULT_PHONE))
             editApiKey.setText(pref?.getString(getString(R.string.server_api_key), DEFAULT_API_KEY))
@@ -99,6 +95,24 @@ class MainFragment : Fragment() {
                 }
             })
 
+            switchServer.setOnCheckedChangeListener { _, isChecked ->
+                if(isChecked){
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS)
+                        != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            context, arrayOf(Manifest.permission.RECEIVE_SMS)
+                            , RECEIVE_SMS_PERMISSION
+                        )
+                    } else{
+                        context.registerReceiver(smsReceiver,SmsReceiver.createIntentFilter())
+                    }
+                }
+                else{
+                    context.unregisterReceiver(smsReceiver)
+                }
+            }
+
             sendBtn.setOnClickListener {
                 if (ContextCompat.checkSelfPermission(activity!!, Manifest.permission.SEND_SMS)
                     != PackageManager.PERMISSION_GRANTED
@@ -121,9 +135,19 @@ class MainFragment : Fragment() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == SEND_SMS_PERMISSION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                sendTextMessage()
+        when(requestCode){
+            SEND_SMS_PERMISSION ->{
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    sendTextMessage()
+                }
+            }
+            RECEIVE_SMS_PERMISSION ->{
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    activity?.registerReceiver(smsReceiver,SmsReceiver.createIntentFilter())
+                }
+                else{
+                    switchServer.isChecked = false
+                }
             }
         }
     }
