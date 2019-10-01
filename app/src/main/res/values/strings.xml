@@ -4,4 +4,9 @@
     <string name="switch_server">Switch server</string>
     <string name="api_key">Api key</string>
     <string name="mac_address">MAC address</string>
+    <string name="no_data">No data</string>
+    <string name="app_data">appData</string>
+    <string name="server_api_key">server_api_key</string>
+    <string name="mac_was_found">MAC was found</string>
+    <string name="mac_was_not_found">MAC was not found</string>
 </resources>
