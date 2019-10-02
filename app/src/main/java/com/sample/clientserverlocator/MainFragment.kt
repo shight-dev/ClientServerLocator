@@ -12,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_main.*
 
@@ -28,7 +27,7 @@ const val SMS_PERMISSIONS = 1000
 
 class MainFragment : Fragment() {
 
-    val permissions = arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS)
+    private val permissions = arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

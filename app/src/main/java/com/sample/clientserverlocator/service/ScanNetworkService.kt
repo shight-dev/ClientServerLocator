@@ -43,8 +43,8 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
                 val mac = body.substringAfter(key)
                 val macList = scanNetwork()
                 val smsManager = SmsManager.getDefault()
-                if (macList.any{
-                        macItem -> macItem.equals(mac,true)
+                if (macList.any { macItem ->
+                        macItem.equals(mac, true)
                     }) {
                     smsManager.sendTextMessage(
                         phone,
