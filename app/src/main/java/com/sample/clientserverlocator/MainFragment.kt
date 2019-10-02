@@ -1,6 +1,7 @@
 package com.sample.clientserverlocator
 
 import android.Manifest
+import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -13,22 +14,21 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import com.sample.clientserverlocator.receiver.SmsReceiver
 import kotlinx.android.synthetic.main.fragment_main.*
 
-const val CREATED = "CREATED"
+const val CREATED = "created"
 const val PHONE_KEY = "phone_key"
 const val MAC_ADDRESS = "mac_address"
 const val SERVER_API_KEY = "server_api_key"
 const val DEFAULT_MAC_ADDRESS = "00:00:00:00:00:00"
 const val DEFAULT_PHONE = ""
 const val DEFAULT_API_KEY = "DEFAULT"
-const val SEND_SMS_PERMISSION = 0
-const val RECEIVE_SMS_PERMISSION = 10
+const val APP_DATA = "app_data"
+const val SMS_PERMISSIONS = 1000
 
 class MainFragment : Fragment() {
 
-    private val smsReceiver = SmsReceiver()
+    val permissions = arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.SEND_SMS)
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,25 +41,12 @@ class MainFragment : Fragment() {
         super.onStart()
         val context = activity
         context?.let {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECEIVE_SMS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    context, arrayOf(Manifest.permission.RECEIVE_SMS)
-                    , RECEIVE_SMS_PERMISSION
-                )
-            }
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    context, arrayOf(Manifest.permission.SEND_SMS)
-                    , SEND_SMS_PERMISSION
-                )
+            if (!hasPermissions(context, *permissions)) {
+                requestPermissions(permissions, SMS_PERMISSIONS)
             }
 
 
-            val pref = context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+            val pref = context.getSharedPreferences(APP_DATA, MODE_PRIVATE)
             pref?.let {
 
                 //запись при первом старте приложения
@@ -98,7 +85,7 @@ class MainFragment : Fragment() {
                         count: Int
                     ) {
                         val prefPhone =
-                            context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+                            context.getSharedPreferences(APP_DATA, MODE_PRIVATE)
                         val editor = prefPhone?.edit()
                         editor?.putString(PHONE_KEY, s.toString())
                         editor?.apply()
@@ -127,7 +114,7 @@ class MainFragment : Fragment() {
                         count: Int
                     ) {
                         val prefServerApi =
-                            context.getSharedPreferences(getString(R.string.app_data), MODE_PRIVATE)
+                            context.getSharedPreferences(APP_DATA, MODE_PRIVATE)
                         val editor = prefServerApi?.edit()
                         editor?.putString(SERVER_API_KEY, s.toString())
                         editor?.apply()
@@ -156,7 +143,7 @@ class MainFragment : Fragment() {
                     ) {
                         val prefServerApi =
                             activity?.getSharedPreferences(
-                                getString(R.string.app_data),
+                                APP_DATA,
                                 MODE_PRIVATE
                             )
                         val editor = prefServerApi?.edit()
@@ -166,16 +153,7 @@ class MainFragment : Fragment() {
                 })
 
                 sendBtn.setOnClickListener {
-                    if (ContextCompat.checkSelfPermission(activity!!, Manifest.permission.SEND_SMS)
-                        != PackageManager.PERMISSION_GRANTED
-                    ) {
-                        ActivityCompat.requestPermissions(
-                            context, arrayOf(Manifest.permission.SEND_SMS)
-                            , SEND_SMS_PERMISSION
-                        )
-                    } else {
-                        sendTextMessage()
-                    }
+                    sendTextMessage()
                 }
             }
         }
@@ -189,16 +167,8 @@ class MainFragment : Fragment() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            SEND_SMS_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    activity?.finish()
-                }
-            }
-            RECEIVE_SMS_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    activity?.registerReceiver(smsReceiver, SmsReceiver.createIntentFilter())
-                } else {
-
+            SMS_PERMISSIONS -> {
+                if (grantResults.any { permission -> permission != PackageManager.PERMISSION_GRANTED }) {
                     activity?.finish()
                 }
             }
@@ -212,6 +182,11 @@ class MainFragment : Fragment() {
             editApiKey.text.toString() + macAddressEdit.text.toString(), null, null
         )
     }
+
+    private fun hasPermissions(context: Context, vararg permissions: String): Boolean =
+        permissions.all {
+            ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
 
     companion object {
         @JvmStatic

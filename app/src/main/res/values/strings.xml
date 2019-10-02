@@ -1,10 +1,8 @@
 <resources>
     <string name="app_name">ClientServerLocator</string>
     <string name="send_request">Send request</string>
-    <string name="switch_server">Switch server</string>
     <string name="api_key">Api key</string>
     <string name="no_data">No data</string>
-    <string name="app_data">appData</string>
     <string name="mac_was_found">MAC was found</string>
     <string name="mac_was_not_found">MAC was not found</string>
     <string name="server_phone_number">Server phone number</string>

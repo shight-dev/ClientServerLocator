@@ -5,18 +5,21 @@ import android.content.Intent
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.telephony.SmsManager
-import android.text.format.Formatter
-import com.sample.clientserverlocator.MAC_ADDRESS
+import com.sample.clientserverlocator.APP_DATA
 import com.sample.clientserverlocator.R
 import com.sample.clientserverlocator.SERVER_API_KEY
 import java.io.BufferedReader
 import java.io.FileReader
 import java.lang.Exception
 import java.net.InetAddress
+import java.math.BigInteger
+
 
 private const val ACTION_SCAN = "com.sample.clientserverlocator.action.scan"
 private const val BODY = "com.sample.clientserverlocator.extra.body"
 private const val PHONE = "com.sample.clientserverlocator.extra.phone"
+
+private const val WAITING_TIME = 100
 
 class ScanNetworkService : IntentService("ScanNetworkService") {
 
@@ -32,7 +35,7 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
 
     private fun handleActionScan(body: String, phone: String) {
         val key: String =
-            getSharedPreferences(getString(R.string.app_data), Context.MODE_PRIVATE).getString(
+            getSharedPreferences(APP_DATA, Context.MODE_PRIVATE).getString(
                 SERVER_API_KEY, ""
             ) ?: ""
         if (!key.contentEquals("")) {
@@ -40,7 +43,9 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
                 val mac = body.substringAfter(key)
                 val macList = scanNetwork()
                 val smsManager = SmsManager.getDefault()
-                if (macList.contains(mac)) {
+                if (macList.any{
+                        macItem -> macItem.equals(mac,true)
+                    }) {
                     smsManager.sendTextMessage(
                         phone,
                         null,
@@ -75,26 +80,24 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
 
     private fun scanNetwork(): MutableList<String> {
         val wm = this.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        //TODO delete
-        val mutableIpList = mutableListOf<String>()
         val mutableMacList = mutableListOf<String>()
         if (wm.isWifiEnabled) {
             val connectionInfo = wm.connectionInfo
-            val ipAddress = connectionInfo.ipAddress
-            //TODO fix
-            val ipString = Formatter.formatIpAddress(ipAddress)
+
+            val ipAddress = BigInteger.valueOf(connectionInfo.ipAddress.toLong()).toByteArray()
+            ipAddress.reverse()
+            val ipString = InetAddress.getByAddress(ipAddress).hostAddress
 
             val prefix = ipString.substring(0, ipString.lastIndexOf(".") + 1)
             for (i in 0..254) {
                 val testIp = prefix + i.toString()
 
                 val address = InetAddress.getByName(testIp)
-                val reachable = address.isReachable(100)
+                val reachable = address.isReachable(WAITING_TIME)
                 if (reachable) {
-                    val s = getMacAddressFromIP(testIp)
-                    s?.let {
-                        mutableMacList.add(s)
-                        mutableIpList.add(testIp)
+                    val mac = getMacAddressFromIP(testIp)
+                    mac?.let {
+                        mutableMacList.add(mac)
                     }
                 }
             }
