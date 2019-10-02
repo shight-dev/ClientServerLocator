@@ -29,12 +29,6 @@
         android:text="@string/mac_address"
         android:hint="@string/mac_address"/>
 
-    <Switch
-        android:id="@+id/switchServer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/switch_server" />
-
     <Button
         android:id="@+id/sendBtn"
         android:layout_width="match_parent"

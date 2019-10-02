@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.wifi.WifiManager
 import android.telephony.SmsManager
 import android.text.format.Formatter
+import com.sample.clientserverlocator.MAC_ADDRESS
 import com.sample.clientserverlocator.R
 import com.sample.clientserverlocator.SERVER_API_KEY
 import java.io.BufferedReader
@@ -74,6 +75,7 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
 
     private fun scanNetwork(): MutableList<String> {
         val wm = this.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        //TODO delete
         val mutableIpList = mutableListOf<String>()
         val mutableMacList = mutableListOf<String>()
         if (wm.isWifiEnabled) {
@@ -90,15 +92,17 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
                 val reachable = address.isReachable(100)
                 if (reachable) {
                     val s = getMacAddressFromIP(testIp)
-                    mutableMacList.add(s)
-                    mutableIpList.add(testIp)
+                    s?.let {
+                        mutableMacList.add(s)
+                        mutableIpList.add(testIp)
+                    }
                 }
             }
         }
         return mutableMacList
     }
 
-    private fun getMacAddressFromIP(ipFinding: String): String {
+    private fun getMacAddressFromIP(ipFinding: String): String? {
         val bufferedReader: BufferedReader?
         try {
             bufferedReader = BufferedReader(FileReader("/proc/net/arp"))
@@ -119,8 +123,8 @@ class ScanNetworkService : IntentService("ScanNetworkService") {
                 line = bufferedReader.readLine()
             }
         } catch (e: Exception) {
-            return getString(R.string.no_data)
+            return null
         }
-        return getString(R.string.no_data)
+        return null
     }
 }
